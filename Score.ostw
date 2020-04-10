@@ -1,0 +1,17 @@
+import "Base.ostw";
+
+rule:"Player Died"
+Event.OnDeath
+if (BetweenRounds == false)
+if (!Waiting(eventPlayer))
+{
+    Deaths++;
+}
+
+rule:"Player Got Elminiation"
+Event.OnElimination
+if (BetweenRounds == false)
+if (!Waiting(eventPlayer))
+{
+    Kills++;
+}

@@ -1,0 +1,86 @@
+import "Base.ostw";
+import "FFA Settings\customGameSettings.json";
+
+//consts
+private define MinRadius: 15;
+private define MaxRadius: 20;
+private define RadiusFraction: 3/4;
+
+//macros
+private Vector MapCentre: PositionOf(RandomValueInArray(AllLivingPlayers()));
+private Vector RandomPoint(): NearestWalkablePosition(Destination(MapCentre, RandomDirection(), RandomReal(0, 100)));
+private define RandomRadius(): RandomReal(MinRadius, MaxRadius);
+private Vector RandomDirection(): DirectionFromAngles(RandomReal(-180, 180), 0);
+private define IsIntersecting(Vector pos1, define rad1, Vector pos2, define rad2): pos1.DistanceTo(pos2) < (rad1 + rad2);
+private Vector GetSpawn(define arena, define dir): NearestWalkablePosition(Destination(BarrierPositions[arena], dir, BarrierRadii[arena] * RadiusFraction));
+
+//methods
+void SetBarriersAndSpawns()
+{
+    CreateHudText(AllPlayers(), "Barriers and spawns are generating. If this takes too long, restart the game.", null, null, Location.Top, 0, Color.White, Color.White, Color.White, HudTextRev.String, Spectators.VisibleAlways);
+    define id = LastTextID();
+    for (define i = 0; i < BarrierCount; i++)
+    {
+        BarrierPositions[i] = RandomPoint();
+        BarrierRadii[i] = RandomRadius();
+        Vector dir = RandomDirection();
+        Spawns[i*2] = GetSpawn(i, dir);
+        Spawns[i*2+1] = GetSpawn(i, -dir);
+        while (
+            (CountOf(FilteredArray(BarrierPositions, IsIntersecting(BarrierPositions[i], BarrierRadii[i], ArrayElement(), BarrierRadii[IndexOfArrayValue(BarrierPositions, ArrayElement())]))) > 1) || //whether any barriers intersect each other
+            !IsInLineOfSight(Spawns[i*2] + Up(),  Spawns[i*2+1] + Up()) || //whether the two spawns are not in line of sight of each other
+            (Spawns[i*2].DistanceTo(BarrierPositions[i]) > BarrierRadii[i]) || //whether spawn 1 is outside the barrier
+            (Spawns[i*2+1].DistanceTo(BarrierPositions[i]) > BarrierRadii[i]) //whether spawn 2 is outside the barrier
+        )
+        {
+            BarrierPositions[i] = RandomPoint();
+            BarrierRadii[i] = RandomReal(
+                MinRadius,
+                Min(MaxRadius, Max(MinRadius, DistanceBetween(SortedArray(BarrierPositions, DistanceBetween(BarrierPositions[i], arrayElement))[0], BarrierPositions[i])))
+            );
+            dir = RandomDirection();
+            Spawns[i*2] = GetSpawn(i, dir);
+            Spawns[i*2+1] = GetSpawn(i, -dir);
+            MinWait();
+        }
+        MinWait();
+    }
+    DestroyHudText(id);
+}
+
+void Matchmake()
+{
+    define players = SortedArray(AllPlayers(), KDR(arrayElement));
+    for (define i = 0; i < CountOf(players); i+=2)
+    {
+        define p1 = players[i];
+        define p2 = players[i+1];
+        p1.Enemy = p2;
+        p2.Enemy = p1;
+        p1.Spawn = i;
+        p2.Spawn = i+1;
+        p1.Arena = i/2;
+        p2.Arena = i/2;
+        SetCommonHero(p1, p2);
+        MinWait();
+    }
+}
+
+void PlayerSetup() {}
+void GlobalSetup() {}
+
+//rules
+rule:"Update Leaderboard Score"
+Event.OngoingPlayer
+{
+    SetPlayerScore(eventPlayer, RoundToInteger(KDR(eventPlayer) * 100, Rounding.Nearest));
+    Wait(1);
+    Loop();
+}
+
+rule:"Declare Winner"
+if (IsGameInProgress())
+if (MatchTime() < 1)
+{
+    DeclarePlayerVictory(LastOf(SortedArray(AllPlayers(), KDR(arrayElement))));
+}

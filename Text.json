@@ -1,0 +1,9 @@
+{
+    "Description": "6 procedurally generated 1v1 arenas at the same time, with matchmaking to put you with players of your skill. Enable and disable heroes to your liking.",
+    "Credits": "By u/TrueCP5",
+    "HideMenu": "To hide this explanation press voice line down.",
+    "Version": "WIP",
+    "HeroSelect": "To enable and disable heroes press interact to open the menu and ultimate to toggle.",
+    "KDR": "Players are sorted by KDR, the higher your KDR, the higher your arena.",
+    "Name": "6 1v1 Arenas"
+}

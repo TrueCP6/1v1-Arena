@@ -1,0 +1,33 @@
+import "Base.ostw";
+
+rule:"Ran Out Of Time"
+if (BetweenRounds == false)
+{
+    Wait(RoundTimeout, WaitBehavior.AbortWhenFalse);
+    StartRound();
+}
+
+rule:"End Of Round"
+if (BetweenRounds == false)
+if (NumberOfPlayers() > 1)
+if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 0)) < 2)
+if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 1)) < 2)
+if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 2)) < 2)
+if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 3)) < 2)
+if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 4)) < 2)
+if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 5)) < 2)
+{
+    StartRound();
+}
+
+rule:"No one is in arena"
+Event.OngoingPlayer
+if (BetweenRounds == false)
+if (!Waiting(eventPlayer))
+if (IsAlive(eventPlayer))
+if (IsAlive(Enemy) == false)
+if (MatchTime() < (MatchLength - 30))
+{
+    Wait(3, WaitBehavior.AbortWhenFalse);
+    StartWaiting(eventPlayer);
+}

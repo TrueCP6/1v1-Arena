@@ -1,0 +1,144 @@
+//potentially localise all strings
+//potentially add model watermark
+//shorten teleport time as much as possible
+//dummy
+//optimise HideExplanation
+//hero select
+//explain everything
+    //spawn getter broken
+    //fix booping
+import "FFA.ostw"; //override methods by changing the imported file
+import "Text.json" as Text;
+import "RoundEnd.ostw";
+import "Score.ostw";
+import "Barriers.ostw";
+import "Waiting.ostw";
+
+//consts
+define RoundTimeout: 60;
+define MatchLength: 60 * 30;
+define eventPlayer: EventPlayer();
+define arrayElement: ArrayElement();
+Hero[] defaultHeroes: RemoveFromArray(AllHeroes(), [Hero.Baptiste, Hero.Bastion, Hero.Dva, Hero.Lucio, Hero.Mei, Hero.Moira, Hero.Orisa, Hero.Winston, Hero.Zarya]);
+define BarrierCount: 7;
+define BarrierTeleportRadiusModifier: 1.5;
+
+//playervars
+playervar define Arena;
+playervar define Spawn;
+playervar define Enemy;
+playervar define DisabledHeroArray;
+playervar define Kills;
+playervar define Deaths;
+playervar Hero _Hero;
+playervar define HideExplanation;
+
+//globalvars
+globalvar Vector[] BarrierPositions;
+globalvar define BarrierRadii;
+globalvar Vector[] Spawns;
+globalvar define BetweenRounds;
+globalvar Hero[] DefaultHeroes;
+globalvar define FinishedCreatingBarriers;
+
+
+//macros
+define Waiting(define player): player.Arena == 6;
+define EnabledHeroes(define player): FilteredArray(DefaultHeroes, !player.DisabledHeroArray[IndexOfArrayValue(player.DisabledHeroArray, arrayElement)]);
+define KDR(define player): player.Kills / player.Deaths;
+
+//methods
+void StartRound() "StartRound"
+{
+    BetweenRounds = true;
+
+    Matchmake();
+
+    Respawn(AllPlayers());
+    Wait(0.75);
+
+    define players = RandomizedArray(AllPlayers()); //players will be spawned in a random order so no one will get an advantage
+    foreach (define p in players)
+    {
+        ForcePlayerHero(p, p._Hero);
+        Teleport(p, Spawns[p.Spawn]);
+        ApplyImpulse(p, -VelocityOf(p), SpeedOf(eventPlayer), Relative.ToWorld, ContraryMotion.Incorporate); //stops the player from keeping any momentum
+        MinWait();
+        SetFacing(p, EyePosition(p).DirectionTowards(Spawns[p.Enemy.Spawn] + Vector(0, 1, 0)));
+    }
+
+    BetweenRounds = false;
+}
+
+void SetCommonHero(ref define p1, ref define p2)
+{
+    define p1h = EnabledHeroes(p1);
+    define p2h = EnabledHeroes(p2);
+    define intersect = FilteredArray(p1h, ArrayContains(p2h, arrayElement));
+    if (CountOf(intersect) == 0)
+        intersect = DefaultHeroes;
+    define hero = RandomValueInArray(intersect);
+    p1._Hero = hero;
+    p2._Hero = hero;
+    PreloadHero([p1, p2], hero);
+}
+
+void StartWaiting(ref define player)
+{
+    player.Arena = 6;
+}
+
+//rules
+rule:"Global Setup"
+if (IsGameInProgress())
+{
+    SetMatchTime(MatchLength);
+    DisableInspectorRecording();
+    DisableScoring();
+    DisableCompletion();
+    DisableMusic();
+    DefaultHeroes = defaultHeroes;
+    CreateHudText(HostPlayer(), ServerLoadAverage());
+    GlobalSetup();
+
+    SetBarriersAndSpawns();
+    FinishedCreatingBarriers = true;
+
+    for (define i = 0; i < BarrierCount; i++)
+        CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, BarrierPositions[i], BarrierRadii[i], EffectRev.VisibleTo);
+
+    //this can be optimised
+    CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Name, Location.Top, 1, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
+    CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Version, Location.Top, 2, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
+    CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Credits, Location.Top, 3, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
+    CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Description, Location.Top, 4, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
+    CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.KDR, Location.Top, 5, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
+    //CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.HeroSelect, Location.Top, 6, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
+    CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.HideMenu, Location.Top, 7, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
+
+    StartRound();
+}
+
+rule:"Player Setup"
+Event.OngoingPlayer
+if (HasSpawned(eventPlayer))
+{
+    DisableRespawning(eventPlayer);
+    Kills = 1;
+    Deaths = 1;
+    StartDamageModification(eventPlayer, RemoveFromArray(AllPlayers(), Enemy), 0, DamageModificationRev.ReceiversAndDamagers);
+    PlayerSetup();
+    StartWaiting(eventPlayer);
+
+    CreateHudText(FilteredArray(eventPlayer, !Waiting(eventPlayer)), <"Enemy: <0><1>", Enemy, HeroIconString(_Hero)>, null, null, Location.Left, 2, Color.Red, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.DefaultVisibility);
+    CreateHudText(FilteredArray(eventPlayer, !Waiting(eventPlayer)), <"Arena: <0>/<1>", Arena+1, RoundToInteger(NumberOfPlayers()/2, Rounding.Up)>, null, null, Location.Left, 0, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.DefaultVisibility);
+    CreateHudText(FilteredArray(eventPlayer, Waiting(eventPlayer)), "Arena: Waiting", null, null, Location.Left, 0, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.DefaultVisibility);
+    CreateHudText(eventPlayer, <"KDR: <0>", KDR(eventPlayer)>, null, null, Location.Left, 1, Color.Green, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.DefaultVisibility);
+}
+
+rule:"Toggle Explanation"
+Event.OngoingPlayer
+if (IsCommunicating(eventPlayer, Communication.VoiceLineDown))
+{
+    HideExplanation = !HideExplanation;
+}

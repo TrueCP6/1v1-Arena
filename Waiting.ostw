@@ -1,0 +1,21 @@
+import "Base.ostw";
+
+rule:"Start Waiting"
+Event.OngoingPlayer
+if (Waiting(eventPlayer))
+if (FinishedCreatingBarriers)
+{
+    Spawn = 12;
+    Enemy = null;
+    SetDamageReceived(eventPlayer, 0);
+    SetDamageDealt(eventPlayer, 0);
+    Teleport(eventPlayer, Spawns[12]);
+}
+
+rule:"Stop Waiting"
+Event.OngoingPlayer
+if (!Waiting(eventPlayer))
+{
+    SetDamageDealt(eventPlayer, 100);
+    SetDamageReceived(eventPlayer, 100);
+}

@@ -1,0 +1,57 @@
+{
+    "Lobby":
+    {
+        "Allow Players Who Are In Queue": true,
+        "Map Rotation": "After A Game",
+        "Return To Lobby": "Never",
+        "Swap Teams After Match": false,
+        "Team Balancing": "After A Game"
+    },
+
+    "Modes":
+    {
+        "Deathmatch":
+        {
+            "Disabled Maps": [
+                "Black Forest (Winter)",
+                "Black Forest",
+                "Castillo",
+                "Ecopoint: Antarctica (Winter)",
+                "Ecopoint: Antarctica",
+                "Necropolis",
+                "Workshop Chamber",
+                "Workshop Expanse",
+                "Workshop Island",
+                "Château Guillard (Halloween)",
+                "Château Guillard",
+                "Petra"
+            ]
+        },
+
+        "All":
+        {
+            "Game Mode Start": "Immediately",
+            "Hero Limit": "Off",
+            "Spawn Health Packs": "Disabled" 
+        }
+    },
+
+    "Heroes":
+    {
+        "General":
+        {
+            "General":
+            {
+                "Ultimate Ability": false
+            },
+            "Mercy":
+            {
+                "Weapons Enabled": "Caduceus Blaster Only"
+            },
+            "Sigma":
+            {
+                "Health": 50
+            }
+        }
+    }
+}

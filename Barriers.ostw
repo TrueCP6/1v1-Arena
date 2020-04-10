@@ -1,0 +1,12 @@
+import "Base.ostw";
+
+rule:"Barrier Booping"
+Event.OngoingPlayer
+if (BarrierPositions[Arena].DistanceTo(PositionOf(eventPlayer)) > BarrierRadii[Arena])
+if (FinishedCreatingBarriers)
+if (BetweenRounds == false)
+{
+    ApplyImpulse(eventPlayer, PositionOf(eventPlayer).DirectionTowards(BarrierPositions[Arena]), 10, Relative.ToWorld, ContraryMotion.Cancel);
+    MinWait();
+    LoopIfConditionIsTrue();
+}
