@@ -17,22 +17,25 @@ private Vector GetSpawn(define arena, define dir): NearestWalkablePosition(Desti
 //methods
 void SetBarriersAndSpawns()
 {
-    CreateHudText(AllPlayers(), "Barriers and spawns are generating. If this takes too long, restart the game.", null, null, Location.Top, 0, Color.White, Color.White, Color.White, HudTextRev.String, Spectators.VisibleAlways);
+    //alerts the host if no suitable barrier positions can be found
+    CreateHudText(AllPlayers(), "Barriers and spawns are generating. If this takes too long, restart the game.", null, null, Location.Top, 0, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleAlways);
     define id = LastTextID();
+
     for (define i = 0; i < BarrierCount; i++)
     {
+        //finds initial random spots
         BarrierPositions[i] = RandomPoint();
         BarrierRadii[i] = RandomRadius();
         Vector dir = RandomDirection();
         Spawns[i*2] = GetSpawn(i, dir);
         Spawns[i*2+1] = GetSpawn(i, -dir);
-        while (
+        while ( //checks that the spawns, positions and radii do not violate any rules
             (CountOf(FilteredArray(BarrierPositions, IsIntersecting(BarrierPositions[i], BarrierRadii[i], ArrayElement(), BarrierRadii[IndexOfArrayValue(BarrierPositions, ArrayElement())]))) > 1) || //whether any barriers intersect each other
             !IsInLineOfSight(Spawns[i*2] + Up(),  Spawns[i*2+1] + Up()) || //whether the two spawns are not in line of sight of each other
             (Spawns[i*2].DistanceTo(BarrierPositions[i]) > BarrierRadii[i]) || //whether spawn 1 is outside the barrier
             (Spawns[i*2+1].DistanceTo(BarrierPositions[i]) > BarrierRadii[i]) //whether spawn 2 is outside the barrier
         )
-        {
+        { //if they do all the vars are recalculated
             BarrierPositions[i] = RandomPoint();
             BarrierRadii[i] = RandomReal(
                 MinRadius,
@@ -45,12 +48,13 @@ void SetBarriersAndSpawns()
         }
         MinWait();
     }
+
     DestroyHudText(id);
 }
 
 void Matchmake()
 {
-    define players = SortedArray(AllPlayers(), KDR(arrayElement));
+    define players = SortedArray(AllPlayers(), KDR(arrayElement)); //sorts players by kdr
     for (define i = 0; i < CountOf(players); i+=2)
     {
         define p1 = players[i];
@@ -66,6 +70,7 @@ void Matchmake()
     }
 }
 
+//not needed for now
 void PlayerSetup() {}
 void GlobalSetup() {}
 
@@ -78,7 +83,7 @@ Event.OngoingPlayer
     Loop();
 }
 
-rule:"Declare Winner"
+rule:"Declare Winner" //when the game is over declare a winner
 if (IsGameInProgress())
 if (MatchTime() < 1)
 {

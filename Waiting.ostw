@@ -1,10 +1,10 @@
 import "Base.ostw";
 
 //macros
-define Waiting(define player): player.Arena == 6;
+define Waiting(define player): player.Arena == 6; //whether the player is waiting
 
 //methods
-void StartWaiting(ref define player)
+void StartWaiting(ref define player) //makes a player start waiting
 {
     player.Arena = 6;
 }
@@ -30,7 +30,7 @@ if (!Waiting(eventPlayer))
     SetDamageReceived(eventPlayer, 100);
 }
 
-rule:"No one is in arena"
+rule:"No one is in arena" //when no one is else is left in the player's arena they get teleported to the waiting arena
 Event.OngoingPlayer
 if (BetweenRounds == false)
 if (!Waiting(eventPlayer))

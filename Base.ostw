@@ -46,7 +46,7 @@ void StartRound() "StartRound"
     Matchmake();
 
     Respawn(AllPlayers());
-    Wait(0.75);
+    Wait(0.75); //wait needs to be done as respawn is async
 
     define players = RandomizedArray(AllPlayers()); //players will be spawned in a random order so no one will get an advantage
     foreach (define p in players)
@@ -55,13 +55,13 @@ void StartRound() "StartRound"
         Teleport(p, Spawns[p.Spawn]);
         ApplyImpulse(p, -VelocityOf(p), SpeedOf(eventPlayer), Relative.ToWorld, ContraryMotion.Incorporate); //stops the player from keeping any momentum
         MinWait();
-        SetFacing(p, EyePosition(p).DirectionTowards(Spawns[p.Enemy.Spawn] + Vector(0, 1, 0)));
+        SetFacing(p, EyePosition(p).DirectionTowards(Spawns[p.Enemy.Spawn] + Vector(0, 1, 0))); //faces the player towards their enemy
     }
 
     BetweenRounds = false;
 }
 
-void SetCommonHero(ref define p1, ref define p2)
+void SetCommonHero(ref define p1, ref define p2) //finds a random hero that both players have enabled
 {
     define p1h = EnabledHeroes(p1);
     define p2h = EnabledHeroes(p2);
@@ -84,13 +84,13 @@ if (IsGameInProgress())
     DisableCompletion();
     DisableMusic();
     DefaultHeroes = defaultHeroes;
-    CreateHudText(HostPlayer(), ServerLoadAverage());
+    CreateHudText(HostPlayer(), ServerLoadAverage()); //shows server load to host
     GlobalSetup();
 
     SetBarriersAndSpawns();
     FinishedCreatingBarriers = true;
 
-    for (define i = 0; i < BarrierCount; i++)
+    for (define i = 0; i < BarrierCount; i++) //creates barriers
         CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, BarrierPositions[i], BarrierRadii[i], EffectRev.VisibleTo);
 
     CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Name, Location.Top, 1, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
@@ -111,10 +111,11 @@ if (HasSpawned(eventPlayer))
     DisableRespawning(eventPlayer);
     Kills = 1;
     Deaths = 1;
-    StartDamageModification(eventPlayer, RemoveFromArray(AllPlayers(), Enemy), 0, DamageModificationRev.ReceiversAndDamagers);
+    StartDamageModification(eventPlayer, RemoveFromArray(AllPlayers(), Enemy), 0, DamageModificationRev.ReceiversAndDamagers); //only the player's enemy can damage them
     PlayerSetup();
     StartWaiting(eventPlayer);
 
+    //creates all the players hud texts
     CreateHudText(FilteredArray(eventPlayer, !Waiting(eventPlayer)), <"Enemy: <0><1>", Enemy, HeroIconString(_Hero)>, null, null, Location.Left, 2, Color.Red, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.DefaultVisibility);
     CreateHudText(FilteredArray(eventPlayer, !Waiting(eventPlayer)), <"Arena: <0>/<1>", Arena+1, RoundToInteger(NumberOfPlayers()/2, Rounding.Up)>, null, null, Location.Left, 0, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.DefaultVisibility);
     CreateHudText(FilteredArray(eventPlayer, Waiting(eventPlayer)), "Arena: Waiting", null, null, Location.Left, 0, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.DefaultVisibility);

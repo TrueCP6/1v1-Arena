@@ -14,6 +14,7 @@ if (BetweenRounds == false)
 rule:"End Of Round"
 if (BetweenRounds == false)
 if (NumberOfPlayers() > 1)
+//if there is only one or less people in each arena
 if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 0)) < 2)
 if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 1)) < 2)
 if (CountOf(FilteredArray(AllLivingPlayers(), arrayElement.Arena == 2)) < 2)
