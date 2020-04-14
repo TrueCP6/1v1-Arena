@@ -1,14 +1,5 @@
 //potentially localise all strings
 //potentially add model watermark
-//shorten teleport time as much as possible
-//dummy
-//optimise HideExplanation
-//hero select
-//explain everything
-    //teleporting broken
-    //fix booping
-//optimise intersect checking
-//optimise round end detection
 import "FFA.ostw"; //override methods by changing the imported file
 import "Text.json" as Text;
 import "RoundEnd.ostw";
