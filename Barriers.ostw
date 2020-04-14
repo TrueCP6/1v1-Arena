@@ -1,5 +1,12 @@
 import "Base.ostw";
 
+//globalvars
+globalvar Vector[] BarrierPositions;
+globalvar define BarrierRadii;
+globalvar Vector[] Spawns;
+globalvar define FinishedCreatingBarriers;
+
+//rules
 rule:"Barrier Booping"
 Event.OngoingPlayer
 if (BarrierPositions[Arena].DistanceTo(PositionOf(eventPlayer)) > BarrierRadii[Arena])

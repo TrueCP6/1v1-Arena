@@ -5,8 +5,10 @@
 //optimise HideExplanation
 //hero select
 //explain everything
-    //spawn getter broken
+    //teleporting broken
     //fix booping
+//optimise intersect checking
+//optimise round end detection
 import "FFA.ostw"; //override methods by changing the imported file
 import "Text.json" as Text;
 import "RoundEnd.ostw";
@@ -15,37 +17,26 @@ import "Barriers.ostw";
 import "Waiting.ostw";
 
 //consts
-define RoundTimeout: 60;
 define MatchLength: 60 * 30;
 define eventPlayer: EventPlayer();
 define arrayElement: ArrayElement();
 Hero[] defaultHeroes: RemoveFromArray(AllHeroes(), [Hero.Baptiste, Hero.Bastion, Hero.Dva, Hero.Lucio, Hero.Mei, Hero.Moira, Hero.Orisa, Hero.Winston, Hero.Zarya]);
 define BarrierCount: 7;
-define BarrierTeleportRadiusModifier: 1.5;
 
 //playervars
 playervar define Arena;
 playervar define Spawn;
 playervar define Enemy;
 playervar define DisabledHeroArray;
-playervar define Kills;
-playervar define Deaths;
 playervar Hero _Hero;
 playervar define HideExplanation;
 
 //globalvars
-globalvar Vector[] BarrierPositions;
-globalvar define BarrierRadii;
-globalvar Vector[] Spawns;
 globalvar define BetweenRounds;
 globalvar Hero[] DefaultHeroes;
-globalvar define FinishedCreatingBarriers;
-
 
 //macros
-define Waiting(define player): player.Arena == 6;
 define EnabledHeroes(define player): FilteredArray(DefaultHeroes, !player.DisabledHeroArray[IndexOfArrayValue(player.DisabledHeroArray, arrayElement)]);
-define KDR(define player): player.Kills / player.Deaths;
 
 //methods
 void StartRound() "StartRound"
@@ -83,11 +74,6 @@ void SetCommonHero(ref define p1, ref define p2)
     PreloadHero([p1, p2], hero);
 }
 
-void StartWaiting(ref define player)
-{
-    player.Arena = 6;
-}
-
 //rules
 rule:"Global Setup"
 if (IsGameInProgress())
@@ -107,7 +93,6 @@ if (IsGameInProgress())
     for (define i = 0; i < BarrierCount; i++)
         CreateEffect(AllPlayers(), Effect.Sphere, Color.Red, BarrierPositions[i], BarrierRadii[i], EffectRev.VisibleTo);
 
-    //this can be optimised
     CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Name, Location.Top, 1, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
     CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Version, Location.Top, 2, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);
     CreateHudText(FilteredArray(AllPlayers(), !arrayElement.HideExplanation), null, null, Text.Credits, Location.Top, 3, Color.White, Color.White, Color.White, HudTextRev.VisibleToAndString, Spectators.VisibleNever);

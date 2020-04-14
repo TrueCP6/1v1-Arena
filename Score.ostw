@@ -1,5 +1,13 @@
 import "Base.ostw";
 
+//playervars
+playervar define Kills;
+playervar define Deaths;
+
+//macros
+define KDR(define player): player.Kills / player.Deaths;
+
+//rules
 rule:"Player Died"
 Event.OnDeath
 if (BetweenRounds == false)

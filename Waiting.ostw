@@ -1,5 +1,15 @@
 import "Base.ostw";
 
+//macros
+define Waiting(define player): player.Arena == 6;
+
+//methods
+void StartWaiting(ref define player)
+{
+    player.Arena = 6;
+}
+
+//rules
 rule:"Start Waiting"
 Event.OngoingPlayer
 if (Waiting(eventPlayer))
@@ -18,4 +28,16 @@ if (!Waiting(eventPlayer))
 {
     SetDamageDealt(eventPlayer, 100);
     SetDamageReceived(eventPlayer, 100);
+}
+
+rule:"No one is in arena"
+Event.OngoingPlayer
+if (BetweenRounds == false)
+if (!Waiting(eventPlayer))
+if (IsAlive(eventPlayer))
+if (IsAlive(Enemy) == false)
+if (MatchTime() < (MatchLength - 30))
+{
+    Wait(3, WaitBehavior.AbortWhenFalse);
+    StartWaiting(eventPlayer);
 }
